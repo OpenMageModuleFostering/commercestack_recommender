@@ -37,5 +37,3 @@ CREATE TABLE IF NOT EXISTS {$this->getTable('recommender/product_link')} (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Related products';
 
 ");
-
-

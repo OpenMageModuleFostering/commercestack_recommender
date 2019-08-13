@@ -402,7 +402,7 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
 
     public function setIndexerStatus($status)
     {
-        $indexer = Mage::getModel('recommender/product_indexer_category');
+        $indexer = Mage::getModel('recommender/category_indexer_product');
         $indexer->setStatus($status);
     }
-}  
+}
