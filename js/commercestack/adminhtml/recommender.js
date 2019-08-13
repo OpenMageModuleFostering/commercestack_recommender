@@ -131,7 +131,7 @@ function updateUI(status)
 
     // Transfer/analysis status items
     var msg = '';
-    if(status.client_status.substring(0, 12) == 'transferring')
+    if(status.client_status != undefined && status.client_status.substring(0, 12) == 'transferring')
 	{
         msg = status.client_message;
         $$('#row_recommender_relatedproducts_cancel td.value p.note span')[0].update(msg);
