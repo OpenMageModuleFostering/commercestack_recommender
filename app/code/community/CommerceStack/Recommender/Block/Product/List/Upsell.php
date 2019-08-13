@@ -5,9 +5,8 @@ class CommerceStack_Recommender_Block_Product_List_Upsell extends Mage_Catalog_B
     protected function _prepareData()
     {
         $limit = Mage::getStoreConfig('recommender/relatedproducts/numberofupsellproducts');
-        
-        /* @var $product Mage_Catalog_Model_Product */
-        $product = Mage::registry('product');
+
+        $product = $this->getProduct();
         
         // A bit of a hack, but return an empty collection if user selected 0 recommendations to show in config
         if($limit < 1)
@@ -34,7 +33,8 @@ class CommerceStack_Recommender_Block_Product_List_Upsell extends Mage_Catalog_B
         if($numRecsToGet > 0)
         {
             // Figure out if we should use a category filter
-            $constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+            //$constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+            $constrainCategory = true;
             $currentCategory = Mage::registry('current_category');
             if (is_object($currentCategory))
             {
@@ -129,45 +129,6 @@ class CommerceStack_Recommender_Block_Product_List_Upsell extends Mage_Catalog_B
             if(is_null($currentCategory->getId())) break;
         }
 
-        // If we still don't have enough recommendations fill out the remaining with randoms.
-        $currentCategory = $productCategory;
-        while($numRecsToGet > 0)
-        {
-            $randCollection = Mage::getResourceModel('catalog/product_collection');
-            Mage::getModel('catalog/layer')->prepareProductCollection($randCollection);
-            $randCollection->getSelect()->order('rand()');
-            $randCollection->addStoreFilter();
-            $randCollection->setPage(1, $numRecsToGet);
-            //$randCollection->addAttributeToFilter('discontinued', 0); // uncomment to filter by attribute
-            $randCollection->addIdFilter(array_merge($unionLinkedItemCollection->getAllIds(), array($product->getId())), true);
-
-            Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($randCollection);
-            /**
-            Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
-            Mage::getSingleton('cataloginventory/stock')->addInStockFilterToCollection($collection);
-             */
-
-            if($useCategoryFilter)
-            {
-                $randCollection->addCategoryFilter($currentCategory);
-            }
-
-            foreach($randCollection as $linkedProduct)
-            {
-                $unionLinkedItemCollection->addItem($linkedProduct);
-            }
-
-            if(!$useCategoryFilter) break; // We tried everything
-
-            if(!is_null($unionLinkedItemCollection))
-            {
-                $numRecsToGet = $limit - count($unionLinkedItemCollection);
-            }
-
-            // Go up a category level for next iteration
-            $currentCategory = $currentCategory->getParentCategory();
-            if(is_null($currentCategory->getId())) break;
-        }
         
         $this->_itemCollection = $unionLinkedItemCollection;
 

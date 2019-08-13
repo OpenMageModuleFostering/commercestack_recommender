@@ -20,7 +20,7 @@ class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link extends M
     	$columnSqlComplete = false;
     	$firstOrder = true;
     	$i = 0;
-    	
+
     	foreach($xml->{$object->getRootName()} as $entity)
     	{
     		$firstColumn = true;

@@ -29,7 +29,7 @@ class CommerceStack_CsNotification_Model_AdminNotification_Feed extends Mage_Adm
 
             $endPoint .= '?recommender_version=' . $recommenderVersion;
             
-            $commercestackXml = $server->get($endPoint, false);
+            $commercestackXml = $server->get($endPoint, true);
             
             if(!$commercestackXml) return $xml;
             $commercestackXml = simplexml_load_string($commercestackXml);

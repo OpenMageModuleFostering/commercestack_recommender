@@ -72,8 +72,8 @@ class CommerceStack_CsApiClient_Model_Account extends Mage_Core_Model_Abstract
 
         $endPoint = Mage::getStoreConfig('csapiclient/api/create_account_uri');
 
-        Mage::log("Account::_createAccount(): xml = \n $xml \n post endpoint: $endPoint \n", null, 'recommender.log');
-        $response = $server->post($endPoint/* . "?XDEBUG_SESSION_START=PHPSTORM"*/, $xml, null, false);
+        //Mage::log("Account::_createAccount(): xml = \n $xml \n post endpoint: $endPoint \n", null, 'recommender.log');
+        $response = $server->post($endPoint /*. "?XDEBUG_SESSION_START=PHPSTORM"*/, $xml, null, false);
 
         $xml = simplexml_load_string($response);
 

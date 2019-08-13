@@ -2,7 +2,7 @@
 <config>
 	<modules>
 		<CommerceStack_Recommender>
-			<version>2.2.4</version>
+			<version>3.0.0</version>
 		</CommerceStack_Recommender>
 	</modules>
 	
@@ -22,19 +22,26 @@
 					<cart_crosssell>CommerceStack_Recommender_Block_Cart_Crosssell</cart_crosssell>
 				</rewrite>
 			</checkout>
-			<adminhtml>
-				<rewrite>
-					<catalog_product_edit_tabs>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tabs</catalog_product_edit_tabs>
-			<!--	<catalog_product_edit_tab_related>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tab_Related</catalog_product_edit_tab_related>
-					<catalog_product_edit_tab_crosssell>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tab_Crosssell</catalog_product_edit_tab_crosssell> -->
-				</rewrite> 
-			</adminhtml>
+			<!--<adminhtml>-->
+				<!--<rewrite>-->
+					<!--<catalog_product_edit_tabs>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tabs</catalog_product_edit_tabs>-->
+			<!--&lt;!&ndash;	<catalog_product_edit_tab_related>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tab_Related</catalog_product_edit_tab_related>-->
+					<!--<catalog_product_edit_tab_crosssell>CommerceStack_Recommender_Block_Catalog_Product_Edit_Tab_Crosssell</catalog_product_edit_tab_crosssell> &ndash;&gt;-->
+				<!--</rewrite> -->
+			<!--</adminhtml>-->
 		</blocks>
 		<helpers>
 			<recommender>
 				<class>CommerceStack_Recommender_Helper</class>
 			</recommender>
 		</helpers>
+        <index>
+            <indexer>
+                <commercestack_recommender>
+                    <model>recommender/product_indexer_category</model>
+                </commercestack_recommender>
+            </indexer>
+        </index>
 		<models>
 			<recommender>
 				<class>CommerceStack_Recommender_Model</class>
@@ -83,7 +90,7 @@
 		</resources>
 	</global>
 
-	<admin>
+    <admin>
         <routers>
             <adminhtml>
                 <args>
@@ -108,13 +115,13 @@
     </frontend>
 
 	<adminhtml>
-		<layout>
-			<updates>
-				<recommender>
-					<file>recommender.xml</file>
-				</recommender>
-			</updates>
-	    </layout> 
+		<!--<layout>-->
+			<!--<updates>-->
+				<!--<recommender>-->
+					<!--<file>recommender.xml</file>-->
+				<!--</recommender>-->
+			<!--</updates>-->
+	    <!--</layout>-->
         <acl>
             <resources>
                 <admin>

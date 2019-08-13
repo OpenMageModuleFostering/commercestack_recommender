@@ -50,10 +50,6 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
                 // A bit of a hack, but return an empty collection if user selected 0 recommendations to show in config
                 if($limit < 1)
                 {
-                    /*$this->_itemCollection = $this->_getCollection($this->_linkSource[0]);
-                    $this->_itemCollection->load();
-                    $this->_itemCollection->clear();
-                    return $this;*/
                     $this->setData('items', $items);
                     return $items;
                 }
@@ -62,6 +58,35 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
                 {
                     $this->setData('items', $items);
                     return $items;
+                }
+
+                // Get last product added to cart and its first category
+                //$constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+                $constrainCategory = true;
+
+                if($constrainCategory)
+                {
+                    $lastProductAdded = null;
+                    $cartProducts = $this->getQuote()->getAllItems();
+                    $max = 0;
+                    $lastItem = null;
+                    foreach ($cartProducts as $item)
+                    {
+                        if ($item->getId() > $max)
+                        {
+                            $max = $item->getId();
+                            $lastItem = $item;
+                        }
+                    }
+                    if ($lastItem)
+                    {
+                        $lastProductAdded = $lastItem->getProduct();
+                        $categoryCollection = $lastProductAdded->getCategoryCollection();
+                        $category = $categoryCollection->getFirstItem();
+                        //$constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+                        $constrainCategory = true;
+                        $useCategoryFilter = !is_null($category) && $constrainCategory;
+                    }
                 }
 
                 $unionLinkedItemCollection = null;
@@ -73,25 +98,28 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
                         $numRecsToGet = $limit - count($unionLinkedItemCollection);
                     }
 
-                    if($numRecsToGet > 0)
+                    while($numRecsToGet > 0)
                     {
-                        if (count($items) < $numRecsToGet)
+                        if(!is_null($unionLinkedItemCollection))
                         {
-                            if(!is_null($unionLinkedItemCollection))
-                            {
-                                $ninProductIds = array_merge($ninProductIds, $unionLinkedItemCollection->getAllIds());
-                            }
-
-                            $filterProductIds = array_merge($this->_getCartProductIds(), $this->_getCartProductIdsRel());
-                            $collection = $this->_getCollection($linkSource)
-                                ->addProductFilter($filterProductIds)
-                                ->addExcludeProductFilter($ninProductIds)
-                                ->setGroupBy()
-                                ->setPositionOrder();
-
-                            $collection->getSelect()->limit($numRecsToGet);
-                            $collection->load();
+                            $ninProductIds = array_merge($ninProductIds, $unionLinkedItemCollection->getAllIds());
                         }
+
+                        $filterProductIds = array_merge($this->_getCartProductIds(), $this->_getCartProductIdsRel());
+                        $collection = $this->_getCollection($linkSource)
+                            ->addProductFilter($filterProductIds)
+                            ->addExcludeProductFilter($ninProductIds)
+                            ->setGroupBy()
+                            ->setPositionOrder();
+
+                        $collection->getSelect()->limit($numRecsToGet);
+
+                        if($useCategoryFilter && $linkSource == 'useLinkSourceCommerceStack')
+                        {
+                            $collection->addCategoryFilter($category);
+                        }
+
+                        $collection->load();
 
                         if(is_null($unionLinkedItemCollection))
                         {
@@ -103,56 +131,18 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
                             foreach($collection as $linkedProduct)
                             {
                                 $unionLinkedItemCollection->addItem($linkedProduct);
+                                $numRecsToGet--;
                             }
                         }
+
+                        //  We only want this while to apply to automated recs
+                        if($linkSource == 'useLinkSourceManual') break;
+
+                        // Go up a category level for next iteration
+                        $category = $category->getParentCategory();
+                        if(is_null($category->getId())) break;
                     }
                 }
-            }
-
-
-            if(@count($unionLinkedItemCollection) < $limit)
-            {
-                // Get categories for randoms
-                $cartProducts = $this->getQuote()->getAllItems();
-                $firstProduct = $cartProducts[0];
-                $firstProduct = $firstProduct->getProduct();
-                $category = $firstProduct->getCategoryCollection();
-                $category = $category->getFirstItem(); // Arbitrary. Really we should do all items before moving up the hierarchy
-
-                $constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
-                $useCategoryFilter = !is_null($category) && $constrainCategory;
-            }
-
-            while(@count($unionLinkedItemCollection) < $limit)
-            {
-                // We still don't have enough recommendations. Fill out the remaining with randoms.
-                $numRecsToGet = $limit - count($unionLinkedItemCollection);
-
-                $randCollection = Mage::getResourceModel('catalog/product_collection');
-                Mage::getModel('catalog/layer')->prepareProductCollection($randCollection);
-                $randCollection->getSelect()->order('rand()');
-                $randCollection->addStoreFilter();
-                $randCollection->setPage(1, $numRecsToGet);
-                $randCollection->addIdFilter(array_merge($unionLinkedItemCollection->getAllIds(), $this->_getCartProductIds()), true);
-                //$randCollection->addAttributeToFilter('discontinued', 0); // uncomment to filter by attribute
-
-                Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($randCollection);
-
-                if($useCategoryFilter)
-                {
-                    $randCollection->addCategoryFilter($category);
-                }
-
-                foreach($randCollection as $linkedProduct)
-                {
-                    $unionLinkedItemCollection->addItem($linkedProduct);
-                }
-
-                if(!$useCategoryFilter) break; // We tried everything
-
-                // Go up a category level for next iteration
-                $category = $category->getParentCategory();
-                if(is_null($category->getId())) $useCategoryFilter = false;
             }
 
             foreach(@$unionLinkedItemCollection as $item)

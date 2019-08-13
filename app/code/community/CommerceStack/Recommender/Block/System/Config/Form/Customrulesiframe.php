@@ -1,10 +1,10 @@
 <?php
-class CommerceStack_Recommender_Block_System_Config_Form_Paymentiframe extends Mage_Adminhtml_Block_System_Config_Form_Field
+class CommerceStack_Recommender_Block_System_Config_Form_Customrulesiframe extends Mage_Adminhtml_Block_System_Config_Form_Field
 {  
     protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element)
     {
         $server = Mage::getModel('csapiclient/server');
-        $url = $server->base_url . 'signup';
+        $url = $server->base_url . 'customrules';
 
         // This will provision an account if none exists so the client should
         // have an account the first time the config page is loaded.
@@ -13,7 +13,7 @@ class CommerceStack_Recommender_Block_System_Config_Form_Paymentiframe extends M
 
         try
         {
-            $style = $server->get('/signup/style');
+            $style = $server->get('/customrules/style');
         }
         catch(Exception $e)
         {
@@ -21,8 +21,7 @@ class CommerceStack_Recommender_Block_System_Config_Form_Paymentiframe extends M
             // so that user can see Api User value under Account for support
         }
 
-        $style = explode('///', $style);
+        return '<iframe id="recommender_customrules_iframe" scrolling="no" src="' . $url . '" style="' . trim($style) . '"></iframe>';
 
-        return '<iframe id="recommender_payment_iframe" scrolling="no" src="' . $url . '" style="' . trim($style[0]) . '"></iframe>';
     }
 }

@@ -9,6 +9,7 @@ class CommerceStack_Recommender_Block_System_Config_Form_Updatebutton extends Ma
         $originalData = $element->getOriginalData();
         $label = Mage::helper('recommender')->__($originalData['button_label']);
         $html = $this->getLayout()->createBlock('adminhtml/widget_button')
+                    ->setId('recommender_update_related_products')
                     ->setType('button')
                     ->setClass('scalable')
                     ->setLabel($label)

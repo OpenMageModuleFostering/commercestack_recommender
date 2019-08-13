@@ -4,8 +4,7 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
 {
     protected function _prepareData()
     {
-        /* @var $product Mage_Catalog_Model_Product */
-        $product = Mage::registry('product');
+        $product = $this->getProduct();
         
         // A bit of a hack, but return an empty collection if user selected 0 recommendations to show in config
         $limit = Mage::getStoreConfig('recommender/relatedproducts/numberofrelatedproducts');
@@ -33,9 +32,10 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
         if($numRecsToGet > 0)
         {
             // Figure out if we should use a category filter
-            $constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+            //$constrainCategory = Mage::getStoreConfig('recommender/relatedproducts/constraincategory');
+            $constrainCategory = true;
             $currentCategory = Mage::registry('current_category');
-            $productCategory = $currentCategory;
+
             if(is_null($currentCategory))
             {
                 // This could be a recently viewed or a search page. Try to get category collection and arbitrarily use first
@@ -43,9 +43,7 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
                 $currentProduct = Mage::registry('current_product');
                 if (is_object($currentProduct))
                 {
-                    $currentCategory = $currentProduct->getCategoryCollection();
-                    $productCategory = $currentCategory->getFirstItem();
-                    $currentCategory = $productCategory;
+                    $currentCategory = $currentProduct->getCategoryCollection()->getFirstItem();
                 }
             }
             $useCategoryFilter = !is_null($currentCategory) && $constrainCategory;
@@ -114,50 +112,8 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
             if(is_null($currentCategory->getId())) break;
         }
 
-        // If we still don't have enough recommendations fill out the remaining with randoms.
-        if($numRecsToGet > 0) $currentCategory = $productCategory;
-        while($numRecsToGet > 0)
-        {
-            $randCollection = Mage::getResourceModel('catalog/product_collection');
-            Mage::getModel('catalog/layer')->prepareProductCollection($randCollection);
-            $randCollection->getSelect()->order('rand()');
-            $randCollection->addStoreFilter();
-            $randCollection->setPage(1, $numRecsToGet);
-            $randCollection->addIdFilter(array_merge($unionLinkedItemCollection->getAllIds(), array($product->getId())), true);
-            //$randCollection->addAttributeToFilter('discontinued', 0); // uncomment to filter by attribute
-
-            Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($randCollection);
-            /**
-            Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
-            Mage::getSingleton('cataloginventory/stock')->addInStockFilterToCollection($collection);
-             */
-
-            if($useCategoryFilter)
-            {
-                $randCollection->addCategoryFilter($currentCategory);
-            }
-            
-            foreach($randCollection as $linkedProduct)
-            {
-                $unionLinkedItemCollection->addItem($linkedProduct);
-            }
-            
-            if(!$useCategoryFilter) break; // We tried everything
-
-            if(!is_null($unionLinkedItemCollection))
-            {
-                $numRecsToGet = $limit - count($unionLinkedItemCollection);
-            }
-            
-            // Go up a category level for next iteration
-            $currentCategory = $currentCategory->getParentCategory();
-            if(is_null($currentCategory->getId())) break;
-            
-        }
-        
         $this->_itemCollection = $unionLinkedItemCollection;
-        
-        
+
         foreach ($this->_itemCollection as $product) {
             $product->setDoNotUseCategoryId(true);
         }

@@ -9,57 +9,42 @@ class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_C
      */
     protected function _joinLinks()
     {
-        $linkResource = $this->getLinkModel()->isLinkSourceManual() ? 'catalog/product_link' : 'recommender/product_link';
-        
-        $joinCondition = 'links.linked_product_id = e.entity_id AND links.link_type_id = ' . $this->_linkTypeId;
+        if($this->getLinkModel()->isLinkSourceManual()) return parent::_joinLinks();
+
+        $select  = $this->getSelect();
+        $adapter = $select->getAdapter();
+
+        $joinCondition = array(
+            'links.linked_product_id = e.entity_id',
+            $adapter->quoteInto('links.link_type_id = ?', $this->_linkTypeId)
+        );
         $joinType = 'join';
         if ($this->getProduct() && $this->getProduct()->getId()) {
+            $productId = $this->getProduct()->getId();
             if ($this->_isStrongMode) {
-                $this->getSelect()->where('links.product_id = ?', $this->getProduct()->getId());
-            }
-            else {
+                $this->getSelect()->where('links.product_id = ?', (int)$productId);
+            } else {
                 $joinType = 'joinLeft';
-                $joinCondition.= ' AND links.product_id = ' . $this->getProduct()->getId();
+                $joinCondition[] = $adapter->quoteInto('links.product_id = ?', $productId);
             }
-            $this->getSelect()->where('e.entity_id != ?', $this->getProduct()->getId());
-        }
-        elseif ($this->_isStrongMode) {
-            $this->getSelect()->where('e.entity_id = -1');
+            $this->addFieldToFilter('entity_id', array('neq' => $productId));
+        } else if ($this->_isStrongMode) {
+            $this->addFieldToFilter('entity_id', array('eq' => -1));
         }
         if($this->_hasLinkFilter) {
-            $selectCols = $this->getLinkModel()->isLinkSourceManual() ? array('link_id') : array('link_id', 'position', 'count');
-            $this->getSelect()->$joinType(
-                array('links' => $this->getTable($linkResource)),
-                $joinCondition,
-                $selectCols
+            $select->$joinType(
+                array('links' => $this->getTable('recommender/product_link')),
+                implode(' AND ', $joinCondition),
+                array('link_id', 'position')
             );
-            $this->joinAttributes();
+            // The only attribute in this model is position which we override anyway.
+            // $this->joinAttributes();
         }
-        return $this;
-    }
-    
-    /**
-     * Join attributes
-     *
-     * @return Mage_Catalog_Model_Product
-     */
-    public function joinAttributes()
-    {
+        if(!is_null($this->getCategoryFilter()) && !is_null($this->getCategoryFilter()->getId()))
+        {
+            $this->getSelect()->where('links.category_id IS NULL OR links.category_id = ?', (int)$this->getCategoryFilter()->getId());
+        }
 
-        if ($this->getLinkModel()) {
-            $attributes = $this->getLinkModel()->getAttributes();
-            $attributesByType = array();
-            foreach ($attributes as $attribute) {
-                if($this->getLinkModel()->isLinkSourceCommerceStack() && $attribute['code'] == 'position') continue;
-                    $table = $this->getLinkModel()->getAttributeTypeTable($attribute['type']);
-                    $alias = 'link_attribute_'.$attribute['code'].'_'.$attribute['type'];
-                    $this->getSelect()->joinLeft(
-                        array($alias => $table),
-                        $alias.'.link_id=links.link_id AND '.$alias.'.product_link_attribute_id='.$attribute['id'],
-                        array($attribute['code'] => 'value')
-                    );
-            }
-        }
         return $this;
     }
     
@@ -90,5 +75,14 @@ class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_C
         $this->_items = array();
     }
 
-    
+    public function addCategoryFilter(Mage_Catalog_Model_Category $category)
+    {
+        $this->_categoryFilter = $category;
+    }
+
+    public function getCategoryFilter()
+    {
+        if(!isset($this->_categoryFilter)) return null;
+        return $this->_categoryFilter;
+    }
 }

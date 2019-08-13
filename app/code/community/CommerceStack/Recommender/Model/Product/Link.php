@@ -5,26 +5,31 @@ class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Pr
     const LINK_SOURCE_MANUAL  = 1;
     const LINK_SOURCE_COMMERCESTACK  = 2;
     
-    protected $_recTypes = array(self::LINK_TYPE_CROSSSELL => 'marketbasket', self::LINK_TYPE_RELATED => 'alsoviewed');
+    protected $_recTypes = array(self::LINK_TYPE_CROSSSELL => array('marketbasket', 'rulesbasedcrosssell'),
+                                self::LINK_TYPE_RELATED => array('alsoviewed', 'rulesbasedrelated'));
 	protected $_linkSource = self::LINK_SOURCE_MANUAL;
 	protected $_collectionAsXml;
 
     public function update()
     {
         $dataHelper = Mage::helper('recommender');
-        
-        foreach($this->_recTypes as $linkType => $rootName)
+
+        foreach($this->_recTypes as $linkType => $rootNames)
         {
             $this->_linkType = $linkType;
-            $this->_rootName = $rootName;
-            $xml = $dataHelper->getFromServer($rootName);
-            
-            if($xml != '')
+
+            foreach($rootNames as $rootName)
             {
-                $this->_collectionAsXml = simplexml_load_string($xml);
-                
-                $this->setHasDataChanges(true);
-                $this->_getResource()->saveByRef($this);
+                $this->_rootName = $rootName;
+                $xml = $dataHelper->getFromServer($rootName);
+
+                if($xml && $xml != '')
+                {
+                    $this->_collectionAsXml = simplexml_load_string($xml);
+
+                    $this->setHasDataChanges(true);
+                    $this->_getResource()->saveByRef($this);
+                }
             }
         }
     }
@@ -69,10 +74,10 @@ class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Pr
         return false;
     }
 
-    public function updateFromXml($xml, $linkType)
+    public function updateFromXml($xml, $linkType, $rootName)
     {
         $this->_linkType = $linkType;
-        $this->_rootName = $this->_recTypes[$linkType];
+        $this->_rootName = $rootName;
         $this->_collectionAsXml = $xml;
         $this->setHasDataChanges(true);
         $this->_getResource()->saveByRef($this);

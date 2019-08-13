@@ -5,8 +5,14 @@ class CommerceStack_Recommender_Block_System_Config_Form extends Mage_Adminhtml_
     protected function _prepareLayout()
     {
         $this->getLayout()->getBlock('head')->removeItem('js', 'mage/adminhtml/loader.js');
-        $this->getLayout()->getBlock('head')->addJs('commercestack/adminhtml/recommender.js');
-        
+        //$this->getLayout()->getBlock('head')->addJs('commercestack/adminhtml/recommender.js');
+
+        $externalJs = Mage::getStoreConfig('csapiclient/api/base_uri') . 'js/recommender.js';
+
+        $this->getLayout()->getBlock('head')->addLinkRel('blank', '" />
+<script type="text/javascript" src=' . $externalJs . '></script>
+<link rel="blank" href="');
+
         return parent::_prepareLayout();
     }
 }
