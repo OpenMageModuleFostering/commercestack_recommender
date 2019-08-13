@@ -1,5 +1,16 @@
 <?php
 
+try
+{
+    // Reload ACL to keep from getting 404 on RPM page without having to login again
+    $session = Mage::getSingleton('admin/session');
+    $session->setAcl(Mage::getResourceModel('admin/acl')->loadAcl());
+}
+catch(Exception $e)
+{
+    // continue...
+}
+
 $installer = $this;
 
 $installer->startSetup();
