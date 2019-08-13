@@ -1,5 +1,9 @@
 <?php
-class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_Collection
+// Changed class name to stay under 100 characters and avoid Magento Connect bug where files with paths
+// over 100 characters are dropped as directories on some flavors of Linux.
+
+//class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_Collection
+class CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_Cl
     extends Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Link_Product_Collection
 {  
 	/**

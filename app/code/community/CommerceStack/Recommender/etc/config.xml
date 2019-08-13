@@ -2,7 +2,7 @@
 <config>
 	<modules>
 		<CommerceStack_Recommender>
-			<version>3.0.1</version>
+			<version>3.0.2</version>
 		</CommerceStack_Recommender>
 	</modules>
 	
@@ -38,7 +38,7 @@
         <index>
             <indexer>
                 <commercestack_recommender>
-                    <model>recommender/product_indexer_category</model>
+                    <model>recommender/category_indexer_product</model>
                 </commercestack_recommender>
             </indexer>
         </index>
@@ -63,7 +63,7 @@
             <catalog_resource_eav_mysql4>
 	            <rewrite>
 	            	<product_link>CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link</product_link>
-	            	<product_link_product_collection>CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_Collection</product_link_product_collection>
+	            	<product_link_product_collection>CommerceStack_Recommender_Model_Resource_Eav_Mysql4_Product_Link_Product_Cl</product_link_product_collection>
 	            </rewrite>
             </catalog_resource_eav_mysql4>
 		</models>
