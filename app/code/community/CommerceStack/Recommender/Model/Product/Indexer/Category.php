@@ -45,22 +45,22 @@ class CommerceStack_Recommender_Model_Product_Indexer_Category extends Mage_Inde
      */
     protected function _registerEvent(Mage_Index_Model_Event $event)
     {
-        $event->addNewData(self::EVENT_MATCH_RESULT_KEY, true);
-        $process = $event->getProcess();
-
-        try
-        {
-            /** @var $dataHelper CommerceStack_Recommender_Helper_Data */
-            $dataHelper = Mage::helper('recommender');
-            $dataHelper->requestUpdate(3);
-        }
-        catch(Exception $e)
-        {
-            // Manual indexing required
-            $process->changeStatus(Mage_Index_Model_Process::STATUS_REQUIRE_REINDEX);
-        }
-
-        return $this;
+//        $event->addNewData(self::EVENT_MATCH_RESULT_KEY, true);
+//        $process = $event->getProcess();
+//
+//        try
+//        {
+//            /** @var $dataHelper CommerceStack_Recommender_Helper_Data */
+//            $dataHelper = Mage::helper('recommender');
+//            $dataHelper->requestUpdate(3);
+//        }
+//        catch(Exception $e)
+//        {
+//            // Manual indexing required
+//            $process->changeStatus(Mage_Index_Model_Process::STATUS_REQUIRE_REINDEX);
+//        }
+//
+//        return $this;
     }
 
     /**
@@ -80,18 +80,18 @@ class CommerceStack_Recommender_Model_Product_Indexer_Category extends Mage_Inde
      */
     public function matchEvent(Mage_Index_Model_Event $event)
     {
-        $data = $event->getNewData();
-        if (isset($data[self::EVENT_MATCH_RESULT_KEY])) {
-            return $data[self::EVENT_MATCH_RESULT_KEY];
-        }
-        $entity = $event->getEntity();
-        $result = true;
-        if (!($entity == Mage_Catalog_Model_Product::ENTITY || $entity == Mage_Catalog_Model_Category::ENTITY))
-        {
-            return;
-        }
-        $event->addNewData(self::EVENT_MATCH_RESULT_KEY, $result);
-        return $result;
+//        $data = $event->getNewData();
+//        if (isset($data[self::EVENT_MATCH_RESULT_KEY])) {
+//            return $data[self::EVENT_MATCH_RESULT_KEY];
+//        }
+//        $entity = $event->getEntity();
+//        $result = true;
+//        if (!($entity == Mage_Catalog_Model_Product::ENTITY || $entity == Mage_Catalog_Model_Category::ENTITY))
+//        {
+//            return;
+//        }
+//        $event->addNewData(self::EVENT_MATCH_RESULT_KEY, $result);
+//        return $result;
     }
 
     /**

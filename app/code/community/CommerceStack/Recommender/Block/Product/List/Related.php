@@ -5,7 +5,7 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
     protected function _prepareData()
     {
         $product = $this->getProduct();
-        
+
         // A bit of a hack, but return an empty collection if user selected 0 recommendations to show in config
         $limit = Mage::getStoreConfig('recommender/relatedproducts/numberofrelatedproducts');
         if($limit < 1)
