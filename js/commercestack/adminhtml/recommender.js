@@ -11,11 +11,13 @@ jQuery.noConflict();
 
 var commercestackBaseUrl = 'https://api.commercestack.com/';
 //var commercestackBaseUrl = 'http://127.0.0.1/recommender/public/';
-var commercestackStatusUrl = commercestackBaseUrl + 'status?';
+var commercestackStatusUrl = commercestackBaseUrl + 'status';
 var commercestackJobUrl = commercestackBaseUrl + 'job';
 var commercestackStatusAuthUrl = null;
 var commercestackLastStatus = null;
-var commercestackPe; 
+var commercestackPe;
+var updateActionUrl = null;
+
 document.observe("dom:loaded", function() {
 		$('row_recommender_relatedproducts_update').hide();
 		$('row_recommender_relatedproducts_cancel').hide();
@@ -32,7 +34,7 @@ document.observe("dom:loaded", function() {
     	}
     	else
     	{
-            generateAuthUrls(apikey.apiUser, apikey.apiSecret);
+            commercestackStatusAuthUrl = generateAuthUrl(commercestackStatusUrl, apikey.apiUser, apikey.apiSecret);
 	    	getStatus();
     	}
 
@@ -44,10 +46,10 @@ document.observe("dom:loaded", function() {
 		}, 5);
 });
 
-function generateAuthUrls(apiUser, apiSecret)
+function generateAuthUrl($url, apiUser, apiSecret)
 {
-	commercestackStatusAuthUrl = commercestackStatusUrl + 'api_user=' + apiUser + '&api_secret=' + apiSecret;
-
+	// Assumes URL has no parameters already
+    return $url + '?api_user=' + apiUser + '&api_secret=' + apiSecret;
 }
 
 function getStatus()
@@ -58,6 +60,10 @@ function getStatus()
 		// update button, the CommerceStack Magento module will request a new API key which the AJAX UI status elements 
 		// needs to function. Because these two processes cannot communicate directly, we periodically ping the CommerceStack Magento module
 		// here to get that information when it becomes available.
+
+        // 2015-09-15 update: I'm not convinced any of this ever runs. The commercestackStatusAuthUrl == undefined
+        // check above will produce an exception and recommender_account_apikeyurl doesn't exist in the DOM. I think
+        // this is an unnecessary hold over from v1.x.
 		var apiKeyUrl = $('recommender_account_apikeyurl').getValue();
 		
 		// Prototype call (no XSS required)
@@ -69,7 +75,7 @@ function getStatus()
 		    	var apikey = transport.responseText.evalJSON();
 		    	if(apikey.apiUser != undefined && apikey.apiSecret != undefined)
 		    	{
-		    		generateAuthUrls(apikey.apiUser, apikey.apiSecret);
+		    		commercestackStatusAuthUrl = generateAuthUrl(commercestackStatusUrl, apikey.apiUser, apikey.apiSecret);
 			    	getStatus();
 		    	}
 
@@ -125,7 +131,7 @@ function updateUI(status)
 
     // Transfer/analysis status items
     var msg = '';
-    if(status.client_status == 'transferring')
+    if(status.client_status.substring(0, 12) == 'transferring')
 	{
         msg = status.client_message;
         $$('#row_recommender_relatedproducts_cancel td.value p.note span')[0].update(msg);
@@ -143,17 +149,26 @@ function updateUI(status)
 	}
 	else if(status.client_status == 'error')
 	{
-		msg = '<b>An error occurred.</b> The error has been logged and sent to CommerceStack engineers. <br/>Please email <b>help@commercestack.com</b> with your <b>API User</b> value (viewable in Account section).';
-		$$('#row_recommender_relatedproducts_update td.value p.note span')[0].update(msg);
-		$('row_recommender_relatedproducts_update').show();
-		$('row_recommender_relatedproducts_cancel').hide();
+        if(this.updateActionUrl == null) {
+            msg = '<b>An error occurred.</b> The error has been logged and sent to CommerceStack engineers. <br/>Please email <b>help@commercestack.com</b> with your <b>API User</b> value (viewable in Account section).';
+            $$('#row_recommender_relatedproducts_update td.value p.note span')[0].update(msg);
+            $('row_recommender_relatedproducts_update').show();
+            $('row_recommender_relatedproducts_cancel').hide();
+        } else {
+        doClientDrivenUpdate();
+        }
 	}
     else if(status.client_status == 'timeout')
     {
-        msg = '<b>Related Products Manager servers were unable to connect to your Magento installation.</b> <br/>This could happen if this is a test version of your site that is not publicly available. If so, this problem should resolve itself when Related Products Manager is installed on your live, publicly available site.';
-        $$('#row_recommender_relatedproducts_update td.value p.note span')[0].update(msg);
-        $('row_recommender_relatedproducts_update').show();
-        $('row_recommender_relatedproducts_cancel').hide();
+        // Try a client driven update if possible
+        if(this.updateActionUrl == null) {
+            msg = '<b>Related Products Manager servers were unable to connect to your Magento installation.</b> <br/>This could happen if this is a test version of your site that is not publicly available. If so, this problem should resolve itself when Related Products Manager is installed on your live, publicly available site.';
+            $$('#row_recommender_relatedproducts_update td.value p.note span')[0].update(msg);
+            $('row_recommender_relatedproducts_update').show();
+            $('row_recommender_relatedproducts_cancel').hide();
+        } else {
+            doClientDrivenUpdate();
+        }
     }
 	else
 	{
@@ -220,15 +235,38 @@ function updateUI(status)
 	
 	commercestackLastStatus = status.client_status;
 }
-	
+
+function doClientDrivenUpdate() {
+    // Server driven update has failed. Assumes caller has checked to see if updateActionUrl is null
+
+    // Hacky but effective
+    this.updateActionUrl = this.updateActionUrl.replace('/requestUpdate/', '/update/');
+    var apiUser = $('recommender_account_apiuser').getValue();
+    var apiSecret = $('recommender_account_apisecret').getValue();
+    var authUrl = generateAuthUrl(this.updateActionUrl, apiUser, apiSecret)
+
+    // Notify server that we're starting (IndexController will do this as well
+    // but this is quicker and keeps client status in the UI from flickering
+    if(commercestackStatusAuthUrl != null)
+    {
+        // JQuery call for XSS
+        jQuery.post(commercestackStatusAuthUrl, 'transferring_client_push');
+    }
+    updateCommerceStackRecs(authUrl);
+    this.updateActionUrl = null; // This will keep us from automatically launching a second time
+}
+
 function updateCommerceStackRecs(updateActionUrl)
 {
     $$('#row_recommender_relatedproducts_update td.value p.note span')[0]
         .update('Starting...');
 
+    // Save this in case we need to go to client-driven update
+    this.updateActionUrl = updateActionUrl;
+
     // Notify server that we're starting (IndexController will do this as well
     // but this is quicker and keeps client status in the UI from flickering
-    if(commercestackStatusAuthUrl != undefined)
+    if(commercestackStatusAuthUrl != null)
     {
         // JQuery call for XSS
         jQuery.post(commercestackStatusAuthUrl, 'transferring');

@@ -12,6 +12,7 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
             ->{$linkSource}()
             ->getProductCollection()
             ->setStoreId(Mage::app()->getStore()->getId())
+            //->addAttributeToFilter('discontinued', 0) // uncomment to filter by attribute
             ->addStoreFilter();
         $this->_addProductAttributesAndPrices($collection);
 
@@ -133,6 +134,7 @@ class CommerceStack_Recommender_Block_Cart_Crosssell extends Mage_Checkout_Block
                 $randCollection->addStoreFilter();
                 $randCollection->setPage(1, $numRecsToGet);
                 $randCollection->addIdFilter(array_merge($unionLinkedItemCollection->getAllIds(), $this->_getCartProductIds()), true);
+                //$randCollection->addAttributeToFilter('discontinued', 0); // uncomment to filter by attribute
 
                 Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($randCollection);
 

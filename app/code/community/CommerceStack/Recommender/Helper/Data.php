@@ -3,6 +3,8 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
 {
     protected $_totalTasks;
     protected $_currentTask;
+    protected $_totalFrames;
+    protected $_currentFrame;
 
     protected function _authenticate($apiUser, $apiSecret)
     {
@@ -41,6 +43,40 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
         );
     }
 
+    // Driver for getTableUpdateAsXml when we are doing a client driven update
+    public function postUpdate($apiUser, $apiSecret, $columns, $table, $primaryKey, $rootName, $chunkSize, $where = NULL)
+    {
+        // Get last server record ID from server
+        $lastServerRecordId = (int)$this->getFromServer($rootName); // If this fails there's no point in continuing. Let exception bubble up
+
+        // Get count of records we'll need to send
+        $connection = Mage::getSingleton('core/resource')->getConnection('core_read');
+        $sql = "SELECT COUNT($primaryKey) FROM $table WHERE $primaryKey > $lastServerRecordId";
+        if(!is_null($where)) $sql .= " AND $where";
+        $result = $connection->query($sql);
+        $totalRecordCount = $result->fetchColumn();
+        if($totalRecordCount <= 0) return;
+
+        $chunkSize == 0 ? $this->_totalFrames = 1 : $this->_totalFrames = ceil($totalRecordCount/$chunkSize);
+
+        $this->_currentFrame = 1;
+        while($this->_currentFrame <= $this->_totalFrames)
+        {
+            $tableUpdateXml = $this->getTableUpdateAsXml($apiUser, $apiSecret, $columns, $table, $primaryKey, $lastServerRecordId, $rootName, $chunkSize, $where);
+
+            /** @var $server CommerceStack_CsApiClient_Model_Server */
+            $server = $this->getServer();
+            $server->post("{$rootName}/", /*. "?XDEBUG_SESSION_START=PHPSTORM",*/ $tableUpdateXml); // let exceptions bubble up
+
+            if($this->_currentFrame != $this->_totalFrames)
+            {
+                $lastServerRecordId = $this->getFromServer($rootName);
+            }
+
+            $this->_currentFrame++;
+        }
+    }
+
     public function getTableUpdateAsXml($apiUser, $apiSecret, $columns, $table, $primaryKey, $lastRecordId, $rootName, $chunkSize, $where = NULL)
     {
         if(!$this->_authenticate($apiUser, $apiSecret))
@@ -60,6 +96,17 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= "<{$rootName}s>\n";
         $xml .= "<commercestack_recommender_version>{$this->_getRecommenderVersion()}</commercestack_recommender_version>\n";
+
+        // If this is a client driven update we need to update the server of progress
+        if(!is_null($this->_currentTask))
+            $xml .= "<current_task>{$this->_currentTask}</current_task>\n";
+        if(!is_null($this->_totalTasks))
+            $xml .= "<total_tasks>{$this->_totalTasks}</total_tasks>\n";
+        if(!is_null($this->_currentFrame))
+            $xml .= "<current_frame>{$this->_currentFrame}</current_frame>\n";
+        if(!is_null($this->_totalFrames))
+            $xml .= "<total_frames>{$this->_totalFrames}</total_frames>\n";
+        // END server progress update for client driven update
 
         // We cannot rely on XMLWriter being available so we construct the XML manually
         foreach ($result as $row)
@@ -95,7 +142,7 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
         return $maxId;
     }
 
-    public function getUpdateXml($rootName)
+    public function getFromServer($rootName)
     {
         $server = $this->getServer();
         
@@ -147,5 +194,42 @@ class CommerceStack_Recommender_Helper_Data extends Mage_Core_Helper_Abstract
         
         return $tableName;
     }
-    
+
+    public function setTotalTasks($totalTasks)
+    {
+        $this->_totalTasks = $totalTasks;
+    }
+
+    public function setCurrentTask($curTask)
+    {
+        $this->_currentTask = $curTask;
+    }
+
+    public function setClientStatus($clientStatus)
+    {
+        $server = $this->getServer();
+
+        try
+        {
+            $server->post('status', $clientStatus);
+        }
+        catch(Exception $e)
+        {
+            $this->reportException($e);
+        }
+    }
+
+    public function prepareNewTransfer($rootName)
+    {
+        $server = $this->getServer();
+
+        try
+        {
+            $server->post($rootName, 'BeginTransfer');
+        }
+        catch(Exception $e)
+        {
+            $this->reportException($e);
+        }
+    }
 }  

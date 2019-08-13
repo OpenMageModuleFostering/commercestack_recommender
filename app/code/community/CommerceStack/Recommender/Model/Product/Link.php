@@ -3,7 +3,7 @@
 class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Product_Link
 {
     const LINK_SOURCE_MANUAL  = 1;
-    const LINK_SOURCE_IGNITE  = 2;
+    const LINK_SOURCE_COMMERCESTACK  = 2;
     
     protected $_recTypes = array(self::LINK_TYPE_CROSSSELL => 'marketbasket', self::LINK_TYPE_RELATED => 'alsoviewed');
 	protected $_linkSource = self::LINK_SOURCE_MANUAL;
@@ -17,7 +17,7 @@ class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Pr
         {
             $this->_linkType = $linkType;
             $this->_rootName = $rootName;
-            $xml = $dataHelper->getUpdateXml($rootName);
+            $xml = $dataHelper->getFromServer($rootName);
             
             if($xml != '')
             {
@@ -53,7 +53,7 @@ class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Pr
     
     public function useLinkSourceCommerceStack()
     {
-        $this->_linkSource = self::LINK_SOURCE_IGNITE;
+        $this->_linkSource = self::LINK_SOURCE_COMMERCESTACK;
         return $this;
     }
     
@@ -65,7 +65,7 @@ class CommerceStack_Recommender_Model_Product_Link extends Mage_Catalog_Model_Pr
     
     public function isLinkSourceCommerceStack()
     {
-        if($this->_linkSource == self::LINK_SOURCE_IGNITE) return true;
+        if($this->_linkSource == self::LINK_SOURCE_COMMERCESTACK) return true;
         return false;
     }
 

@@ -61,6 +61,7 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
                 ->addAttributeToSelect('required_options')
                 ->setGroupBy()
                 ->setPositionOrder()
+                //->addAttributeToFilter('discontinued', 0) // uncomment to filter by attribute
                 ->addStoreFilter();
 
             $linkedItemCollection->getSelect()->limit($numRecsToGet);
@@ -81,6 +82,10 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
             $this->_addProductAttributesAndPrices($linkedItemCollection);
 
             Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($linkedItemCollection);
+            /**
+            Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
+            Mage::getSingleton('cataloginventory/stock')->addInStockFilterToCollection($collection);
+             */
 
             $linkedItemCollection->load();
 
@@ -119,8 +124,13 @@ class CommerceStack_Recommender_Block_Product_List_Related extends Mage_Catalog_
             $randCollection->addStoreFilter();
             $randCollection->setPage(1, $numRecsToGet);
             $randCollection->addIdFilter(array_merge($unionLinkedItemCollection->getAllIds(), array($product->getId())), true);
+            //$randCollection->addAttributeToFilter('discontinued', 0); // uncomment to filter by attribute
 
             Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($randCollection);
+            /**
+            Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
+            Mage::getSingleton('cataloginventory/stock')->addInStockFilterToCollection($collection);
+             */
 
             if($useCategoryFilter)
             {
