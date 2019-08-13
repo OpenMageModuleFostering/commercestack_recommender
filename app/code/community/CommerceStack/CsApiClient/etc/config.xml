@@ -17,8 +17,8 @@
     <default>
     	<csapiclient>
     		<api>
-   				<!--<base_uri>https://api.commercestack.com/</base_uri>-->
-                <base_uri>http://127.0.0.1/recommender/public/</base_uri>
+   				<base_uri>https://api.commercestack.com/</base_uri>
+                <!--<base_uri>http://127.0.0.1/recommender/public/</base_uri>-->
                 <create_account_uri>account/</create_account_uri>
             </api>
      </csapiclient>
