@@ -1,6 +1,6 @@
 <?php
 include("Mage/Adminhtml/controllers/Catalog/ProductController.php");
-class CommerceStack_Recommender_ProductController extends Mage_Adminhtml_Catalog_ProductController
+class CommerceStack_Recommender_Adminhtml_RecommenderproductController extends Mage_Adminhtml_Catalog_ProductController
 {
     public function relatedAction()
     {

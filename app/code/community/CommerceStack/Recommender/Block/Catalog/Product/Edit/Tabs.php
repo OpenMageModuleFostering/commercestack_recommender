@@ -7,25 +7,25 @@ class CommerceStack_Recommender_Block_Catalog_Product_Edit_Tabs extends Mage_Adm
         
         $this->addTab('commercestack_related', array(
                 'label'     => Mage::helper('catalog')->__('Related Products (Automated)'),
-                'url'       => $this->getUrl('recommender/product/related', array('_current' => true)), //'commercestack_related' => true)),
+                'url'       => Mage::helper("adminhtml")->getUrl('adminhtml/recommenderproduct/related', array('_current' => true)), //'commercestack_related' => true)),
                 'class'     => 'ajax',
                 'insertAfter' => 'related',
             ));
 
         // Upsell source is based on user-config
         $upsellSource = Mage::getStoreConfig('recommender/relatedproductsadvanced/upsellsource');
-        $tabUrls = array('related' => 'recommender/product/related', 'crosssell' => 'recommender/product/crosssell', 'random' => '*/*/upsell');
+        $tabUrls = array('related' => 'adminhtml/recommenderproduct/related', 'crosssell' => 'adminhtml/recommenderproduct/crosssell', 'random' => '*/*/upsell');
         
         $this->addTab('commercestack_upsell', array(
                 'label'     => Mage::helper('catalog')->__('Up-sells (Automated)'),
-                'url'       => $this->getUrl($tabUrls[$upsellSource], array('_current' => true)), //'commercestack_upsell' => true)),
+                'url'       => Mage::helper("adminhtml")->getUrl($tabUrls[$upsellSource], array('_current' => true)), //'commercestack_upsell' => true)),
                 'class'     => 'ajax',
                 'insertAfter' => 'upsell',
             ));
              
         $this->addTab('commercestack_crosssell', array(
             'label'     => Mage::helper('catalog')->__('Cross-sells (Automated)'),
-            'url'       => $this->getUrl('recommender/product/crosssell', array('_current' => true)), //'commercestack_crosssell' => true)),
+            'url'       => Mage::helper("adminhtml")->getUrl('adminhtml/recommenderproduct/crosssell', array('_current' => true)), //'commercestack_crosssell' => true)),
             'class'     => 'ajax',
             'insertAfter' => 'crosssell',
         ));

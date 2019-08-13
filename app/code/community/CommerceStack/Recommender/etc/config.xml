@@ -2,7 +2,7 @@
 <config>
 	<modules>
 		<CommerceStack_Recommender>
-			<version>2.2.3</version>
+			<version>2.2.4</version>
 		</CommerceStack_Recommender>
 	</modules>
 	
@@ -85,13 +85,13 @@
 
 	<admin>
         <routers>
-            <recommender>
-                <use>admin</use>
+            <adminhtml>
                 <args>
-                    <module>CommerceStack_Recommender</module>
-                    <frontName>recommender</frontName>
+                    <modules>
+                        <commercestack_recommender after="Mage_Adminhtml">CommerceStack_Recommender_Adminhtml</commercestack_recommender>
+                    </modules>
                 </args>
-            </recommender>
+            </adminhtml>
         </routers>
     </admin>
 
