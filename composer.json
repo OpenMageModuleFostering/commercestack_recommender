@@ -1,7 +1,7 @@
 {
-    "name": "OpenMageModuleFostering\/CommerceStack_Recommender",
+    "name": "openmage-module-fostering\/commercestack_recommender",
     "type": "magento-module",
-    "license": "Open-Software-License-v-3.0",
+    "license": "OSL-3.0",
     "homepage": "",
     "description": "Automatically generate related products, up-sells, and cross-sells for your entire catalog with one click.",
     "authors": [
